@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Management System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #6c5ce7;
+            --secondary-color: #00cec9;
+            --danger-color: #ff7675;
+            --warning-color: #fdcb6e;
+            --dark-color: #1a1a2e;
+            --darker-color: #16213e;
+            --light-color: #e2e2e2;
+            --success-color: #00b894;
+            --info-color: #0984e3;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            --transition: all 0.3s ease;
+            --glow: 0 0 15px rgba(108, 92, 231, 0.5);
+            --text-glow: 0 0 8px rgba(108, 92, 231, 0.7);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0f0f1a;
+            color: var(--light-color);
+            line-height: 1.6;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(108, 92, 231, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(0, 206, 201, 0.1) 0%, transparent 20%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--dark-color), var(--darker-color));
+            color: white;
+            padding: 25px 0;
+            margin-bottom: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow), var(--glow);
+            text-align: center;
+            border-bottom: 2px solid var(--primary-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--primary-color));
+            animation: borderGlow 3s linear infinite;
+            background-size: 200% 100%;
+        }
+
+        @keyframes borderGlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        h1 {
+            font-size: 42px;
+            font-weight: bold;
+            background: linear-gradient(90deg, #6c5ce7, #0d1a08, #ee2603);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: textGradient 5s ease infinite;
+            text-shadow: var(--text-glow);
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        @keyframes textGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .header-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding: 0 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--border-radius);
+            background-color: var(--primary-color);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--box-shadow);
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transform: translateX(-100%);
+            transition: 0.6s;
+            z-index: -1;
+        }
+
+        .btn:hover::before {
+            transform: translateX(100%);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3), var(--glow);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-color);
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+        }
+
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: #333;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+        }
+
+        .btn-info {
+            background-color: var(--info-color);
+        }
+
+        .btn:disabled {
+            background-color: #4a4a6a;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            opacity: 0.7;
+        }
+
+        .btn:disabled::before {
+            display: none;
+        }
+
+        .btn.pulse {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: var(--box-shadow); }
+            50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(108, 92, 231, 0.8); }
+            100% { transform: scale(1); box-shadow: var(--box-shadow); }
+        }
+
+        .status-display {
+            padding: 15px 25px;
+            border-radius: var(--border-radius);
+            margin: 20px 0;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+            background-color: rgba(26, 26, 46, 0.8);
+            border-left: 5px solid;
+            box-shadow: var(--box-shadow);
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .status-display.info {
+            border-left-color: var(--info-color);
+            color: var(--info-color);
+            text-shadow: 0 0 5px rgba(9, 132, 227, 0.3);
+        }
+
+        .status-display.success {
+            border-left-color: var(--success-color);
+            color: var(--success-color);
+            text-shadow: 0 0 5px rgba(0, 184, 148, 0.3);
+        }
+
+        .status-display.error {
+            border-left-color: var(--danger-color);
+            color: var(--danger-color);
+            text-shadow: 0 0 5px rgba(255, 118, 117, 0.3);
+        }
+
+        .form-container {
+            background: linear-gradient(145deg, #1a1a2e, #16213e);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: var(--box-shadow), var(--glow);
+            transition: var(--transition);
+            border: 1px solid rgba(108, 92, 231, 0.2);
+        }
+
+        .form-container:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4), 0 0 20px rgba(108, 92, 231, 0.6);
+            transform: translateY(-3px);
+        }
+
+        .form-title {
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            color: var(--light-color);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-shadow: 0 0 10px rgba(108, 92, 231, 0.5);
+        }
+
+        .form-title i {
+            color: var(--primary-color);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 10px;
+            font-weight: 500;
+            color: var(--light-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        label i {
+            color: var(--secondary-color);
+            width: 20px;
+            text-align: center;
+        }
+
+        input, select, textarea {
+            padding: 14px;
+            background-color: rgba(26, 26, 46, 0.8);
+            border: 1px solid rgba(108, 92, 231, 0.3);
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            transition: var(--transition);
+            color: var(--light-color);
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.3);
+            background-color: rgba(26, 26, 46, 0.9);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .table-container {
+            background: linear-gradient(145deg, #1a1a2e, #16213e);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--box-shadow), var(--glow);
+            margin-bottom: 40px;
+            border: 1px solid rgba(108, 92, 231, 0.2);
+        }
+
+        .table-container h2 {
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            color: var(--light-color);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-shadow: 0 0 10px rgba(108, 92, 231, 0.5);
+        }
+
+        .table-container h2 i {
+            color: var(--primary-color);
+        }
+
+        .students-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: rgba(26, 26, 46, 0.8);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .students-table th {
+            background: linear-gradient(90deg, var(--dark-color), var(--darker-color));
+            color: white;
+            padding: 18px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .students-table td {
+            padding: 15px;
+            border-bottom: 1px solid rgba(108, 92, 231, 0.1);
+            color: var(--light-color);
+        }
+
+        .students-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .students-table tr:hover {
+            background-color: rgba(108, 92, 231, 0.1);
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .edit-btn {
+            background-color: var(--warning-color);
+            color: #333;
+        }
+
+        .delete-btn {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        .action-btn.deleting {
+            background-color: #4a4a6a;
+            cursor: not-allowed;
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            color: #7f8c8d;
+        }
+
+        .empty-state i {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            color: rgba(108, 92, 231, 0.5);
+        }
+
+        .empty-state p {
+            font-size: 1.2rem;
+            margin-top: 10px;
+        }
+
+        .file-info {
+            background: rgba(26, 26, 46, 0.8);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: var(--box-shadow);
+            border-left: 5px solid var(--primary-color);
+        }
+
+        .file-info i {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
+
+        #currentFileName {
+            font-weight: 500;
+            color: var(--light-color);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-controls {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .students-table {
+                display: block;
+                overflow-x: auto;
+            }
+
+            h1 {
+                font-size: 32px;
+            }
+        }
+
+        /* Animation for new items */
+        @keyframes fadeInRow {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .students-table tbody tr {
+            animation: fadeInRow 0.5s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .students-table tbody tr:nth-child(1) { animation-delay: 0.1s; }
+        .students-table tbody tr:nth-child(2) { animation-delay: 0.2s; }
+        .students-table tbody tr:nth-child(3) { animation-delay: 0.3s; }
+        .students-table tbody tr:nth-child(4) { animation-delay: 0.4s; }
+        .students-table tbody tr:nth-child(5) { animation-delay: 0.5s; }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(26, 26, 46, 0.5);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+
+        /* Floating particles for background */
+        .particle {
+            position: fixed;
+            background: rgba(108, 92, 231, 0.3);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-user-graduate"></i> Student Management System</h1>
+            <div class="header-controls">
+                <button id="fileSelectBtn" class="btn btn-secondary">
+                    <i class="fas fa-folder-open"></i> Open Excel File
+                </button>
+                <button id="newFileBtn" class="btn btn-info">
+                    <i class="fas fa-file-excel"></i> New Excel File
+                </button>
+                <button id="saveBtn" class="btn btn-success" disabled>
+                    <i class="fas fa-save"></i> Save to Excel
+                </button>
+                <button id="saveAsBtn" class="btn btn-warning">
+                    <i class="fas fa-save"></i> Save As
+                </button>
+            </div>
+        </header>
+
+        <div id="statusDisplay" class="status-display">
+            <i class="fas fa-info-circle"></i> System ready
+        </div>
+
+        <div id="fileInfoDisplay" class="file-info" style="display: none;">
+            <i class="fas fa-file-excel"></i>
+            <span id="currentFileName">No file selected</span>
+        </div>
+
+        <div class="form-container">
+            <h2 class="form-title"><i class="fas fa-user-edit"></i> Student Details</h2>
+            <form id="studentForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="firstName"><i class="fas fa-user"></i> First Name</label>
+                        <input type="text" id="firstName" placeholder="Enter first name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName"><i class="fas fa-user"></i> Last Name</label>
+                        <input type="text" id="lastName" placeholder="Enter last name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="age"><i class="fas fa-birthday-cake"></i> Age</label>
+                        <input type="number" id="age" placeholder="Enter age" min="5" max="99" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone"><i class="fas fa-phone"></i> Phone Number</label>
+                        <input type="tel" id="phone" placeholder="Enter phone number" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email"><i class="fas fa-envelope"></i> Email</label>
+                        <input type="email" id="email" placeholder="Enter email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="address"><i class="fas fa-map-marker-alt"></i> Address</label>
+                        <textarea id="address" placeholder="Enter full address"></textarea>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="reset" class="btn btn-danger">
+                        <i class="fas fa-times"></i> Clear
+                    </button>
+                    <button type="submit" id="submitBtn" class="btn btn-primary">
+                        <i class="fas fa-plus-circle"></i> Add Student
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-container">
+            <h2><i class="fas fa-users"></i> Student List</h2>
+            <table class="students-table">
+                <thead>
+                    <tr>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Age</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th>Address</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="studentsTableBody">
+                    <tr>
+                        <td colspan="7" class="empty-state">
+                            <i class="fas fa-user-graduate"></i>
+                            <p>No students found. Add your first student above.</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Create floating particles
+        function createParticles() {
+            const particlesCount = 20;
+            for (let i = 0; i < particlesCount; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                
+                const size = Math.random() * 10 + 5;
+                const posX = Math.random() * window.innerWidth;
+                const posY = Math.random() * window.innerHeight;
+                const duration = Math.random() * 20 + 10;
+                const delay = Math.random() * 5;
+                
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.left = `${posX}px`;
+                particle.style.top = `${posY}px`;
+                particle.style.opacity = Math.random() * 0.5 + 0.1;
+                
+                document.body.appendChild(particle);
+                
+                // Animate particles
+                setInterval(() => {
+                    particle.animate([
+                        { transform: `translate(0, 0)` },
+                        { transform: `translate(${Math.random() * 100 - 50}px, ${Math.random() * 100 - 50}px)` }
+                    ], {
+                        duration: duration * 1000,
+                        delay: delay * 1000,
+                        iterations: Infinity,
+                        direction: 'alternate',
+                        easing: 'ease-in-out'
+                    });
+                }, 100);
+            }
+        }
+        
+        // Initialize particles
+        createParticles();
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('studentForm');
+            const tableBody = document.getElementById('studentsTableBody');
+            const fileSelectBtn = document.getElementById('fileSelectBtn');
+            const newFileBtn = document.getElementById('newFileBtn');
+            const saveBtn = document.getElementById('saveBtn');
+            const saveAsBtn = document.getElementById('saveAsBtn');
+            const statusDisplay = document.getElementById('statusDisplay');
+            const submitBtn = document.getElementById('submitBtn');
+            const fileInfoDisplay = document.getElementById('fileInfoDisplay');
+            const currentFileName = document.getElementById('currentFileName');
+            
+            let students = [];
+            let editIndex = null;
+            let fileHandle = null;
+            let isFileSelected = false;
+
+            // Initialize the application
+            init();
+
+            async function init() {
+                // Check for File System Access API support
+                if (!('showOpenFilePicker' in window) || !('showSaveFilePicker' in window)) {
+                    showStatus('<i class="fas fa-exclamation-triangle"></i> Your browser does not support the File System Access API. Some features may be limited.', 'error');
+                    fileSelectBtn.disabled = true;
+                    newFileBtn.disabled = true;
+                    saveBtn.disabled = true;
+                    saveAsBtn.disabled = true;
+                    return;
+                }
+
+                // Try to restore previous session
+                const restored = await restoreFileHandle();
+                if (!restored) {
+                    showStatus('<i class="fas fa-info-circle"></i> Please open an existing Excel file or create a new one', 'info');
+                }
+            }
+
+            // File Selection - Open existing file
+            fileSelectBtn.addEventListener('click', async () => {
+                try {
+                    fileSelectBtn.disabled = true;
+                    fileSelectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+                    
+                    const [handle] = await window.showOpenFilePicker({
+                        types: [{
+                            description: 'Excel Files',
+                            accept: {
+                                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx']
+                            }
+                        }],
+                        multiple: false
+                    });
+                    
+                    await setFileHandle(handle);
+                    
+                    // Add celebration effect
+                    celebrate();
+                } catch (err) {
+                    console.error('File selection error:', err);
+                    if (err.name !== 'AbortError') {
+                        showStatus('<i class="fas fa-times-circle"></i> File selection cancelled or failed', 'error');
+                    }
+                } finally {
+                    fileSelectBtn.disabled = false;
+                    fileSelectBtn.innerHTML = '<i class="fas fa-folder-open"></i> Open Excel File';
+                }
+            });
+
+            // Create new file
+            newFileBtn.addEventListener('click', async () => {
+                try {
+                    newFileBtn.disabled = true;
+                    newFileBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+                    
+                    // Create a new empty workbook
+                    students = [];
+                    updateTable();
+                    
+                    // Prompt user to save the new file
+                    const handle = await window.showSaveFilePicker({
+                        types: [{
+                            description: 'Excel Files',
+                            accept: {
+                                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx']
+                            }
+                        }],
+                        suggestedName: 'students.xlsx'
+                    });
+                    
+                    await setFileHandle(handle);
+                    await saveToFile(); // Save empty students to the new file
+                    
+                    showStatus('<i class="fas fa-check-circle"></i> New student file created', 'success');
+                    celebrate();
+                } catch (err) {
+                    console.error('New file creation error:', err);
+                    if (err.name !== 'AbortError') {
+                        showStatus('<i class="fas fa-times-circle"></i> New file creation cancelled or failed', 'error');
+                    }
+                } finally {
+                    newFileBtn.disabled = false;
+                    newFileBtn.innerHTML = '<i class="fas fa-file-excel"></i> New Excel File';
+                }
+            });
+
+            // Save to current file
+            saveBtn.addEventListener('click', async () => {
+                if (!fileHandle) {
+                    showStatus('<i class="fas fa-exclamation-circle"></i> No file selected to save', 'error');
+                    return;
+                }
+                
+                try {
+                    await saveToFile();
+                } catch (err) {
+                    console.error('Save error:', err);
+                    showStatus(`<i class="fas fa-exclamation-circle"></i> Error saving file: ${err.message}`, 'error');
+                }
+            });
+
+            // Save As - create new file
+            saveAsBtn.addEventListener('click', async () => {
+                try {
+                    saveAsBtn.disabled = true;
+                    saveAsBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                    
+                    const handle = await window.showSaveFilePicker({
+                        types: [{
+                            description: 'Excel Files',
+                            accept: {
+                                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx']
+                            }
+                        }],
+                        suggestedName: fileHandle ? fileHandle.name : 'students.xlsx'
+                    });
+                    
+                    await setFileHandle(handle);
+                    await saveToFile();
+                    
+                    showStatus('<i class="fas fa-check-circle"></i> File saved successfully with new name', 'success');
+                } catch (err) {
+                    console.error('Save As error:', err);
+                    if (err.name !== 'AbortError') {
+                        showStatus('<i class="fas fa-times-circle"></i> Save As operation cancelled or failed', 'error');
+                    }
+                } finally {
+                    saveAsBtn.disabled = false;
+                    saveAsBtn.innerHTML = '<i class="fas fa-save"></i> Save As';
+                }
+            });
+
+            async function setFileHandle(handle) {
+                fileHandle = handle;
+                
+                // Store file handle info in localStorage
+                const file = await fileHandle.getFile();
+                localStorage.setItem('studentsFileHandle', JSON.stringify({
+                    name: file.name,
+                    id: handle.id,
+                    lastModified: file.lastModified
+                }));
+                
+                // Update UI
+                currentFileName.textContent = file.name;
+                fileInfoDisplay.style.display = 'flex';
+                saveBtn.disabled = false;
+                isFileSelected = true;
+                
+                // Load the file contents if it's an existing file with data
+                if (file.size > 0) {
+                    await loadExcelFile();
+                } else {
+                    students = [];
+                    updateTable();
+                }
+                
+                showStatus(`<i class="fas fa-check-circle"></i> Working with: ${file.name}`, 'success');
+            }
+
+            async function verifyFilePermissions() {
+                if (!fileHandle) return false;
+                
+                const options = { mode: 'readwrite' };
+                if (await fileHandle.queryPermission(options) === 'granted') return true;
+                return await fileHandle.requestPermission(options) === 'granted';
+            }
+
+            async function loadExcelFile() {
+                try {
+                    showStatus('<i class="fas fa-sync-alt fa-spin"></i> Loading file...', 'info');
+                    const file = await fileHandle.getFile();
+                    const data = await file.arrayBuffer();
+                    const workbook = XLSX.read(data);
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    students = XLSX.utils.sheet_to_json(firstSheet);
+                    updateTable();
+                    showStatus(`<i class="fas fa-check-circle"></i> Loaded ${students.length} students from ${file.name}`, 'success');
+                } catch (err) {
+                    console.error('Load error:', err);
+                    showStatus('<i class="fas fa-exclamation-circle"></i> Error loading file', 'error');
+                    throw err;
+                }
+            }
+
+            async function saveToFile() {
+                try {
+                    // Verify we have permissions
+                    if (!(await verifyFilePermissions())) {
+                        showStatus('<i class="fas fa-exclamation-circle"></i> Need write permissions to save', 'error');
+                        return;
+                    }
+
+                    saveBtn.disabled = true;
+                    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                    
+                    // Create Excel workbook
+                    const wb = XLSX.utils.book_new();
+                    const ws = XLSX.utils.json_to_sheet(students);
+                    XLSX.utils.book_append_sheet(wb, ws, "Students");
+
+                    // Write to file
+                    const writable = await fileHandle.createWritable();
+                    await writable.write(XLSX.write(wb, { bookType: 'xlsx', type: 'array' }));
+                    await writable.close();
+                    
+                    // Update stored file info
+                    const file = await fileHandle.getFile();
+                    localStorage.setItem('studentsFileHandle', JSON.stringify({
+                        name: file.name,
+                        id: fileHandle.id,
+                        lastModified: file.lastModified
+                    }));
+                    
+                    showStatus(`<i class="fas fa-check-circle"></i> Saved ${students.length} students to ${file.name} at ${new Date().toLocaleTimeString()}`, 'success');
+                    
+                    // Add save confirmation animation
+                    saveBtn.classList.add('pulse');
+                    setTimeout(() => {
+                        saveBtn.classList.remove('pulse');
+                    }, 2000);
+                    
+                    // Floating animation for saved state
+                    saveBtn.animate([
+                        { transform: 'translateY(0)' },
+                        { transform: 'translateY(-5px)' },
+                        { transform: 'translateY(0)' }
+                    ], {
+                        duration: 500,
+                        iterations: 1
+                    });
+                } catch (err) {
+                    console.error('Save error:', err);
+                    showStatus(`<i class="fas fa-exclamation-circle"></i> Error saving file: ${err.message}`, 'error');
+                    throw err;
+                } finally {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = '<i class="fas fa-save"></i> Save to Excel';
+                }
+            }
+
+            // Try to restore file handle from localStorage
+            const restoreFileHandle = async () => {
+                const handleData = localStorage.getItem('studentsFileHandle');
+                if (!handleData) return false;
+                
+                try {
+                    showStatus('<i class="fas fa-sync-alt fa-spin"></i> Restoring previous session...', 'info');
+                    
+                    const { name, id } = JSON.parse(handleData);
+                    const handles = await window.showOpenFilePicker({
+                        types: [{
+                            description: 'Excel Files',
+                            accept: {
+                                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx']
+                            }
+                        }],
+                        multiple: false,
+                        _preferStoredFile: true
+                    });
+                    
+                    for (const handle of handles) {
+                        const file = await handle.getFile();
+                        if (file.name === name && handle.id === id) {
+                            await setFileHandle(handle);
+                            return true;
+                        }
+                    }
+                } catch (err) {
+                    console.log('Could not restore file handle:', err);
+                    showStatus('<i class="fas fa-exclamation-circle"></i> Could not restore previous file', 'error');
+                    localStorage.removeItem('studentsFileHandle');
+                }
+                return false;
+            };
+
+            // Form Submission
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const student = {
+                    firstName: document.getElementById('firstName').value.trim(),
+                    lastName: document.getElementById('lastName').value.trim(),
+                    age: parseInt(document.getElementById('age').value),
+                    phone: document.getElementById('phone').value.trim(),
+                    email: document.getElementById('email').value.trim(),
+                    address: document.getElementById('address').value.trim()
+                };
+
+                if (!validateStudent(student)) return;
+
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                
+                setTimeout(() => {
+                    if (editIndex !== null) {
+                        students[editIndex] = student;
+                        editIndex = null;
+                        submitBtn.innerHTML = '<i class="fas fa-plus-circle"></i> Add Student';
+                        showStatus(`<i class="fas fa-check-circle"></i> Student updated successfully`, 'success');
+                        
+                        // Add update animation
+                        document.querySelector('.form-container').animate([
+                            { transform: 'translateY(0)' },
+                            { transform: 'translateY(-5px)' },
+                            { transform: 'translateY(0)' }
+                        ], {
+                            duration: 300,
+                            iterations: 1
+                        });
+                    } else {
+                        students.push(student);
+                        showStatus(`<i class="fas fa-check-circle"></i> Student added successfully`, 'success');
+                        
+                        // Add celebration effect for new student
+                        celebrate();
+                    }
+
+                    updateTable();
+                    form.reset();
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-plus-circle"></i> Add Student';
+                }, 800);
+            });
+
+            function validateStudent(student) {
+                if (!student.firstName || !student.lastName || isNaN(student.age) || !student.phone || !student.email) {
+                    showStatus('<i class="fas fa-exclamation-circle"></i> Please fill all required fields', 'error');
+                    return false;
+                }
+                
+                if (student.age < 5 || student.age > 99) {
+                    showStatus('<i class="fas fa-exclamation-circle"></i> Age must be between 5 and 99', 'error');
+                    return false;
+                }
+                
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(student.email)) {
+                    showStatus('<i class="fas fa-exclamation-circle"></i> Please enter a valid email address', 'error');
+                    return false;
+                }
+                
+                if (!/^[\d\s\-()+]{8,}$/.test(student.phone)) {
+                    showStatus('<i class="fas fa-exclamation-circle"></i> Please enter a valid phone number', 'error');
+                    return false;
+                }
+                
+                return true;
+            }
+
+            function updateTable() {
+                tableBody.innerHTML = '';
+                
+                if (students.length === 0) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td colspan="7" class="empty-state"><i class="fas fa-user-graduate"></i><p>No students found. Add your first student above.</p></td>`;
+                    tableBody.appendChild(row);
+                    return;
+                }
+                
+                students.forEach((student, index) => {
+                    const row = document.createElement('tr');
+                    row.style.setProperty('--row-index', index);
+                    row.innerHTML = `
+                        <td>${student.firstName}</td>
+                        <td>${student.lastName}</td>
+                        <td>${student.age}</td>
+                        <td>${formatPhone(student.phone)}</td>
+                        <td>${student.email}</td>
+                        <td>${student.address || 'N/A'}</td>
+                        <td>
+                            <button class="action-btn edit-btn" onclick="editStudent(${index})">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="action-btn delete-btn" onclick="deleteStudent(${index})">
+                                <i class="fas fa-trash-alt"></i> Delete
+                            </button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+            
+            function formatPhone(phone) {
+                // Simple phone number formatting
+                const cleaned = ('' + phone).replace(/\D/g, '');
+                const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
+                return match ? `(${match[1]}) ${match[2]}-${match[3]}` : phone;
+            }
+            
+            function showStatus(message, type = 'info') {
+                statusDisplay.innerHTML = message;
+                statusDisplay.className = 'status-display';
+                if (type) statusDisplay.classList.add(type);
+                
+                // Animation for status change
+                statusDisplay.animate([
+                    { opacity: 0, transform: 'translateY(-10px)' },
+                    { opacity: 1, transform: 'translateY(0)' }
+                ], {
+                    duration: 300,
+                    fill: 'forwards'
+                });
+            }
+
+            function celebrate() {
+                // Simple confetti effect
+                const confettiElements = document.querySelectorAll('.form-container, .table-container');
+                confettiElements.forEach(el => {
+                    el.animate([
+                        { transform: 'scale(1)' },
+                        { transform: 'scale(1.02)' },
+                        { transform: 'scale(1)' }
+                    ], {
+                        duration: 300,
+                        iterations: 1
+                    });
+                });
+            }
+
+            window.editStudent = function(index) {
+                const student = students[index];
+                document.getElementById('firstName').value = student.firstName;
+                document.getElementById('lastName').value = student.lastName;
+                document.getElementById('age').value = student.age;
+                document.getElementById('phone').value = student.phone;
+                document.getElementById('email').value = student.email;
+                document.getElementById('address').value = student.address || '';
+                editIndex = index;
+                submitBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Update Student';
+                
+                // Scroll to form with smooth animation
+                form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                
+                // Highlight the form
+                document.querySelector('.form-container').animate([
+                    { boxShadow: '0 0 0 0 rgba(138, 0, 0, 0)' },
+                    { boxShadow: '0 0 0 5px rgba(138, 0, 0, 0.3)' },
+                    { boxShadow: '0 0 0 0 rgba(138, 0, 0, 0)' }
+                ], {
+                    duration: 1000,
+                    iterations: 1
+                });
+                
+                showStatus(`<i class="fas fa-user-edit"></i> Editing student: ${student.firstName} ${student.lastName}`, 'info');
+            };
+
+            window.deleteStudent = function(index) {
+                const deleteBtn = event.target.closest('.delete-btn');
+                deleteBtn.classList.add('deleting');
+                deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+                
+                setTimeout(() => {
+                    if (confirm(`Delete ${students[index].firstName} ${students[index].lastName} permanently?`)) {
+                        const deletedStudent = students.splice(index, 1)[0];
+                        updateTable();
+                        showStatus(`<i class="fas fa-user-minus"></i> Deleted student: ${deletedStudent.firstName} ${deletedStudent.lastName} (remember to save)`, 'error');
+                        
+                        // Shake animation for the entire table
+                        tableBody.animate([
+                            { transform: 'translateX(0)' },
+                            { transform: 'translateX(-5px)' },
+                            { transform: 'translateX(5px)' },
+                            { transform: 'translateX(0)' }
+                        ], {
+                            duration: 300,
+                            iterations: 1
+                        });
+                    } else {
+                        deleteBtn.classList.remove('deleting');
+                        deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> Delete';
+                    }
+                }, 300);
+            };
+
+            // Keyboard shortcut to save (Ctrl+S)
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                    e.preventDefault();
+                    if (!saveBtn.disabled) {
+                        saveBtn.click();
+                        
+                        // Visual feedback for keyboard shortcut
+                        saveBtn.animate([
+                            { transform: 'scale(1)' },
+                            { transform: 'scale(1.1)' },
+                            { transform: 'scale(1)' }
+                        ], {
+                            duration: 300,
+                            iterations: 1
+                        });
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
