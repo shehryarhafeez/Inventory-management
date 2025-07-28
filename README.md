@@ -1,8 +1,12 @@
 🎓 Student Management System (Dark Epic Edition)
 A modern, responsive Student Management System that runs entirely in your browser with an epic dark theme. No backend, no setup — just open the file and manage student data with ease.
 
-🚀 Features
-🎨 Dark Epic Theme – Beautiful dark UI with glowing accents and smooth animations
+
+📦 Instructions
+The Applications is designed for local Invertory Management. it will only work if you're using local system to Save and open files directly from your local system
+
+
+🚀 Features- Dark Epic Theme, Beautiful dark UI with glowing accents and smooth animations
 
 📊 Excel Integration – Save/load student data to/from .xlsx files using SheetJS
 
@@ -40,9 +44,6 @@ This system works best in modern browsers that support the File System Access AP
 
 💡 For best performance and full features, use Google Chrome or Microsoft Edge.
 
-📦 Instractions
-The Applications is designed for local Invertory Management. it will only work if you're using local system to Save and open files directly from your local system
-
 ✍️ Usage
 First Create an Excel file or Load an with the extension of.xlsx
 ➕ Add Students Record
@@ -74,7 +75,7 @@ Ctrl+S / Cmd+S	Save current file
 Contributions are welcome!
 If you'd like to suggest improvements or fix bugs:
 
-👨‍💻 Developed With
+👨‍💻 Developed by
 Shehryar Hafeez- [shehryarhafeez180@gmail.com]
 
 
