@@ -81,7 +81,7 @@
         h1 {
             font-size: 2.5rem;
             font-weight: bold;
-            background: linear-gradient(90deg, #0b0822, #ce1800, #467c70);
+            background: linear-gradient(90deg, #0b0822, #ce1800, #3cad95);
             background-size: 200% 200%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -699,10 +699,7 @@
                     if (!restored) {
                         showStatus('<i class="fas fa-info-circle"></i> Please open an existing Excel file or create a new one', 'info');
                     }
-                } catch (err) {
-                    console.error('Init error:', err);
-                    showStatus('<i class="fas fa-exclamation-circle"></i> Error initializing application', 'error');
-                }
+                } 
             }
 
             // File Selection - Open existing file
