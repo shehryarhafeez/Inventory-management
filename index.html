@@ -569,11 +569,8 @@
                 <button id="newFileBtn" class="btn btn-info">
                     <i class="fas fa-file-excel"></i> New Excel File
                 </button>
-                <button id="saveBtn" class="btn btn-success" disabled>
+                <button id="saveBtn" class="btn btn-success">
                     <i class="fas fa-save"></i> Save to Excel
-                </button>
-                <button id="saveAsBtn" class="btn btn-warning">
-                    <i class="fas fa-save"></i> Save As
                 </button>
             </div>
         </header>
@@ -660,7 +657,6 @@
             const fileSelectBtn = document.getElementById('fileSelectBtn');
             const newFileBtn = document.getElementById('newFileBtn');
             const saveBtn = document.getElementById('saveBtn');
-            const saveAsBtn = document.getElementById('saveAsBtn');
             const statusDisplay = document.getElementById('statusDisplay');
             const submitBtn = document.getElementById('submitBtn');
             const fileInfoDisplay = document.getElementById('fileInfoDisplay');
@@ -668,38 +664,13 @@
             
             let students = [];
             let editIndex = null;
-            let fileHandle = null;
-            let isFileSelected = false;
+            let currentFileNameValue = '';
 
             // Initialize the application
             init();
 
-            async function init() {
-                // Check for File System Access API support with better detection
-                const isFileSystemSupported = ('showOpenFilePicker' in window) && 
-                                            ('showSaveFilePicker' in window) &&
-                                            ('FileSystemHandle' in window);
-                
-                if (!isFileSystemSupported) {
-                    showStatus('<i class="fas fa-exclamation-triangle"></i> Your browser does not support all required file system features. Try Chrome/Edge 86+ or Firefox 111+', 'error');
-                    fileSelectBtn.disabled = true;
-                    newFileBtn.disabled = true;
-                    saveBtn.disabled = true;
-                    saveAsBtn.disabled = true;
-                    
-                    // Add visual indicator for unsupported browser
-                    document.querySelector('header').style.background = 'linear-gradient(135deg, #4a0000, #2e0000)';
-                    document.querySelector('h1').style.background = 'linear-gradient(90deg, #ff4d4d, #ff9999, #ff4d4d)';
-                    return;
-                }
-
-                // Try to restore previous session
-                try {
-                    const restored = await restoreFileHandle();
-                    if (!restored) {
-                        showStatus('<i class="fas fa-info-circle"></i> Please open an existing Excel file or create a new one', 'info');
-                    }
-                } 
+            function init() {
+                showStatus('<i class="fas fa-info-circle"></i> System ready. Open an Excel file or create a new one', 'info');
             }
 
             // File Selection - Open existing file
@@ -708,268 +679,73 @@
                     fileSelectBtn.disabled = true;
                     fileSelectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
                     
-                    const [handle] = await window.showOpenFilePicker({
-                        types: [{
-                            description: 'Excel Files',
-                            accept: {
-                                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx']
-                            }
-                        }],
-                        multiple: false,
-                        excludeAcceptAllOption: false
-                    }).catch(err => {
-                        if (err.name === 'AbortError') {
-                            showStatus('<i class="fas fa-info-circle"></i> File selection was cancelled', 'info');
-                        } else {
-                            throw err;
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = '.xlsx';
+                    
+                    input.onchange = async (e) => {
+                        const file = e.target.files[0];
+                        if (!file) {
+                            fileSelectBtn.disabled = false;
+                            fileSelectBtn.innerHTML = '<i class="fas fa-folder-open"></i> Open Excel File';
+                            return;
                         }
-                        return [null];
-                    });
+                        
+                        currentFileNameValue = file.name;
+                        currentFileName.textContent = file.name;
+                        fileInfoDisplay.style.display = 'flex';
+                        
+                        try {
+                            const data = await file.arrayBuffer();
+                            const workbook = XLSX.read(data);
+                            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                            students = XLSX.utils.sheet_to_json(firstSheet);
+                            updateTable();
+                            
+                            showStatus(`<i class="fas fa-check-circle"></i> Loaded ${students.length} students from ${file.name}`, 'success');
+                            celebrate();
+                        } catch (err) {
+                            console.error('Error loading file:', err);
+                            showStatus('<i class="fas fa-times-circle"></i> Error loading Excel file', 'error');
+                        }
+                    };
                     
-                    if (!handle) {
-                        fileSelectBtn.disabled = false;
-                        fileSelectBtn.innerHTML = '<i class="fas fa-folder-open"></i> Open Excel File';
-                        return;
-                    }
-                    
-                    await setFileHandle(handle);
-                    
-                    // Add celebration effect
-                    celebrate();
+                    input.click();
                 } catch (err) {
                     console.error('File selection error:', err);
-                    let errorMsg = 'File selection failed';
-                    
-                    if (err.message.includes('permission')) {
-                        errorMsg = 'Permission denied. Please allow file access.';
-                    } else if (err.name === 'SecurityError') {
-                        errorMsg = 'Security restrictions prevent file access.';
-                    }
-                    
-                    showStatus(`<i class="fas fa-times-circle"></i> ${errorMsg}`, 'error');
-                    
-                    // Visual error feedback
-                    fileSelectBtn.animate([
-                        { backgroundColor: 'var(--danger-color)', transform: 'translateX(-5px)' },
-                        { backgroundColor: 'var(--danger-color)', transform: 'translateX(5px)' },
-                        { backgroundColor: 'var(--danger-color)', transform: 'translateX(-5px)' },
-                        { backgroundColor: 'var(--danger-color)', transform: 'translateX(0)' }
-                    ], {
-                        duration: 300,
-                        iterations: 1
-                    });
+                    showStatus('<i class="fas fa-times-circle"></i> File selection failed', 'error');
                 } finally {
                     fileSelectBtn.disabled = false;
                     fileSelectBtn.innerHTML = '<i class="fas fa-folder-open"></i> Open Excel File';
                 }
             });
 
-            // Create new file with better error handling
+            // Create new file
             newFileBtn.addEventListener('click', async () => {
                 try {
                     newFileBtn.disabled = true;
                     newFileBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
                     
-                    // Create a new empty workbook
                     students = [];
+                    currentFileNameValue = 'students.xlsx';
+                    currentFileName.textContent = 'New File (not saved yet)';
+                    fileInfoDisplay.style.display = 'flex';
                     updateTable();
                     
-                    // Show save dialog with better options
-                    const handle = await window.showSaveFilePicker({
-                        types: [{
-                            description: 'Excel Files',
-                            accept: {
-                                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx']
-                            }
-                        }],
-                        suggestedName: 'students.xlsx',
-                        excludeAcceptAllOption: false
-                    }).catch(err => {
-                        if (err.name === 'AbortError') {
-                            showStatus('<i class="fas fa-info-circle"></i> File creation was cancelled', 'info');
-                        } else {
-                            throw err;
-                        }
-                        return null;
-                    });
-
-                    if (!handle) {
-                        newFileBtn.disabled = false;
-                        newFileBtn.innerHTML = '<i class="fas fa-file-excel"></i> New Excel File';
-                        return;
-                    }
-                    
-                    await setFileHandle(handle);
-                    await saveToFile(); // Save empty students to the new file
-                    
-                    showStatus('<i class="fas fa-check-circle"></i> New student file created successfully', 'success');
+                    showStatus('<i class="fas fa-check-circle"></i> New student file created', 'success');
                     celebrate();
                 } catch (err) {
                     console.error('New file creation error:', err);
-                    let errorMsg = 'New file creation failed';
-                    
-                    if (err.message.includes('permission')) {
-                        errorMsg = 'Permission denied. Please allow file access.';
-                    } else if (err.name === 'SecurityError') {
-                        errorMsg = 'Security restrictions prevent file creation.';
-                    }
-                    
-                    showStatus(`<i class="fas fa-times-circle"></i> ${errorMsg}`, 'error');
-                    
-                    // Visual error feedback
-                    newFileBtn.animate([
-                        { backgroundColor: 'var(--danger-color)', transform: 'translateX(-5px)' },
-                        { backgroundColor: 'var(--danger-color)', transform: 'translateX(5px)' },
-                        { backgroundColor: 'var(--danger-color)', transform: 'translateX(-5px)' },
-                        { backgroundColor: 'var(--danger-color)', transform: 'translateX(0)' }
-                    ], {
-                        duration: 300,
-                        iterations: 1
-                    });
+                    showStatus('<i class="fas fa-times-circle"></i> New file creation failed', 'error');
                 } finally {
                     newFileBtn.disabled = false;
                     newFileBtn.innerHTML = '<i class="fas fa-file-excel"></i> New Excel File';
                 }
             });
 
-            // Save to current file
+            // Save to file
             saveBtn.addEventListener('click', async () => {
-                if (!fileHandle) {
-                    showStatus('<i class="fas fa-exclamation-circle"></i> No file selected to save', 'error');
-                    return;
-                }
-                
                 try {
-                    await saveToFile();
-                } catch (err) {
-                    console.error('Save error:', err);
-                    showStatus(`<i class="fas fa-exclamation-circle"></i> Error saving file: ${err.message}`, 'error');
-                }
-            });
-
-            // Save As - create new file
-            saveAsBtn.addEventListener('click', async () => {
-                try {
-                    saveAsBtn.disabled = true;
-                    saveAsBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-                    
-                    const handle = await window.showSaveFilePicker({
-                        types: [{
-                            description: 'Excel Files',
-                            accept: {
-                                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx']
-                            }
-                        }],
-                        suggestedName: fileHandle ? fileHandle.name : 'students.xlsx',
-                        excludeAcceptAllOption: false
-                    }).catch(err => {
-                        if (err.name === 'AbortError') {
-                            showStatus('<i class="fas fa-info-circle"></i> Save As operation was cancelled', 'info');
-                        } else {
-                            throw err;
-                        }
-                        return null;
-                    });
-
-                    if (!handle) {
-                        saveAsBtn.disabled = false;
-                        saveAsBtn.innerHTML = '<i class="fas fa-save"></i> Save As';
-                        return;
-                    }
-                    
-                    await setFileHandle(handle);
-                    await saveToFile();
-                    
-                    showStatus('<i class="fas fa-check-circle"></i> File saved successfully with new name', 'success');
-                } catch (err) {
-                    console.error('Save As error:', err);
-                    let errorMsg = 'Save As operation failed';
-                    
-                    if (err.message.includes('permission')) {
-                        errorMsg = 'Permission denied. Please allow file access.';
-                    } else if (err.name === 'SecurityError') {
-                        errorMsg = 'Security restrictions prevent file saving.';
-                    }
-                    
-                    showStatus(`<i class="fas fa-times-circle"></i> ${errorMsg}`, 'error');
-                } finally {
-                    saveAsBtn.disabled = false;
-                    saveAsBtn.innerHTML = '<i class="fas fa-save"></i> Save As';
-                }
-            });
-
-            async function setFileHandle(handle) {
-                try {
-                    fileHandle = handle;
-                    
-                    // Store file handle info in localStorage
-                    const file = await handle.getFile();
-                    localStorage.setItem('studentsFileHandle', JSON.stringify({
-                        name: file.name,
-                        id: handle.id,
-                        lastModified: file.lastModified
-                    }));
-                    
-                    // Update UI
-                    currentFileName.textContent = file.name;
-                    fileInfoDisplay.style.display = 'flex';
-                    saveBtn.disabled = false;
-                    isFileSelected = true;
-                    
-                    // Load the file contents if it's an existing file with data
-                    if (file.size > 0) {
-                        await loadExcelFile();
-                    } else {
-                        students = [];
-                        updateTable();
-                    }
-                    
-                    showStatus(`<i class="fas fa-check-circle"></i> Working with: ${file.name}`, 'success');
-                } catch (err) {
-                    console.error('Error setting file handle:', err);
-                    showStatus('<i class="fas fa-exclamation-circle"></i> Error accessing file', 'error');
-                    throw err;
-                }
-            }
-
-            async function verifyFilePermissions() {
-                if (!fileHandle) return false;
-                
-                try {
-                    const options = { mode: 'readwrite' };
-                    if (await fileHandle.queryPermission(options) === 'granted') return true;
-                    return await fileHandle.requestPermission(options) === 'granted';
-                } catch (err) {
-                    console.error('Permission verification error:', err);
-                    return false;
-                }
-            }
-
-            async function loadExcelFile() {
-                try {
-                    showStatus('<i class="fas fa-sync-alt fa-spin"></i> Loading file...', 'info');
-                    const file = await fileHandle.getFile();
-                    const data = await file.arrayBuffer();
-                    const workbook = XLSX.read(data);
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    students = XLSX.utils.sheet_to_json(firstSheet);
-                    updateTable();
-                    showStatus(`<i class="fas fa-check-circle"></i> Loaded ${students.length} students from ${file.name}`, 'success');
-                } catch (err) {
-                    console.error('Load error:', err);
-                    showStatus('<i class="fas fa-exclamation-circle"></i> Error loading file', 'error');
-                    throw err;
-                }
-            }
-
-            async function saveToFile() {
-                try {
-                    // Verify we have permissions
-                    if (!(await verifyFilePermissions())) {
-                        showStatus('<i class="fas fa-exclamation-circle"></i> Need write permissions to save', 'error');
-                        return;
-                    }
-
                     saveBtn.disabled = true;
                     saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
                     
@@ -978,89 +754,27 @@
                     const ws = XLSX.utils.json_to_sheet(students);
                     XLSX.utils.book_append_sheet(wb, ws, "Students");
 
-                    // Write to file
-                    const writable = await fileHandle.createWritable();
-                    await writable.write(XLSX.write(wb, { bookType: 'xlsx', type: 'array' }));
-                    await writable.close();
+                    // Generate file name
+                    const fileName = currentFileNameValue || 'students.xlsx';
                     
-                    // Update stored file info
-                    const file = await fileHandle.getFile();
-                    localStorage.setItem('studentsFileHandle', JSON.stringify({
-                        name: file.name,
-                        id: fileHandle.id,
-                        lastModified: file.lastModified
-                    }));
+                    // Save file
+                    XLSX.writeFile(wb, fileName);
                     
-                    showStatus(`<i class="fas fa-check-circle"></i> Saved ${students.length} students to ${file.name} at ${new Date().toLocaleTimeString()}`, 'success');
+                    showStatus(`<i class="fas fa-check-circle"></i> Saved ${students.length} students to ${fileName}`, 'success');
                     
                     // Add save confirmation animation
                     saveBtn.classList.add('pulse');
                     setTimeout(() => {
                         saveBtn.classList.remove('pulse');
                     }, 2000);
-                    
-                    // Floating animation for saved state
-                    saveBtn.animate([
-                        { transform: 'translateY(0)' },
-                        { transform: 'translateY(-5px)' },
-                        { transform: 'translateY(0)' }
-                    ], {
-                        duration: 500,
-                        iterations: 1
-                    });
                 } catch (err) {
                     console.error('Save error:', err);
-                    showStatus(`<i class="fas fa-exclamation-circle"></i> Error saving file: ${err.message}`, 'error');
-                    throw err;
+                    showStatus('<i class="fas fa-times-circle"></i> Error saving file', 'error');
                 } finally {
                     saveBtn.disabled = false;
                     saveBtn.innerHTML = '<i class="fas fa-save"></i> Save to Excel';
                 }
-            }
-
-            // Try to restore file handle from localStorage
-            const restoreFileHandle = async () => {
-                const handleData = localStorage.getItem('studentsFileHandle');
-                if (!handleData) return false;
-                
-                try {
-                    showStatus('<i class="fas fa-sync-alt fa-spin"></i> Restoring previous session...', 'info');
-                    
-                    const { name, id } = JSON.parse(handleData);
-                    const handles = await window.showOpenFilePicker({
-                        types: [{
-                            description: 'Excel Files',
-                            accept: {
-                                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx']
-                            }
-                        }],
-                        multiple: false,
-                        _preferStoredFile: true
-                    }).catch(err => {
-                        console.log('File picker cancelled:', err);
-                        return [];
-                    });
-                    
-                    for (const handle of handles) {
-                        try {
-                            const file = await handle.getFile();
-                            if (file.name === name && handle.id === id) {
-                                await setFileHandle(handle);
-                                return true;
-                            }
-                        } catch (err) {
-                            console.log('Error checking file:', err);
-                            continue;
-                        }
-                    }
-                    return false;
-                } catch (err) {
-                    console.log('Could not restore file handle:', err);
-                    showStatus('<i class="fas fa-exclamation-circle"></i> Could not restore previous file', 'error');
-                    localStorage.removeItem('studentsFileHandle');
-                    return false;
-                }
-            };
+            });
 
             // Form Submission
             form.addEventListener('submit', function(e) {
@@ -1241,7 +955,7 @@
                     if (confirm(`Delete ${students[index].firstName} ${students[index].lastName} permanently?`)) {
                         const deletedStudent = students.splice(index, 1)[0];
                         updateTable();
-                        showStatus(`<i class="fas fa-user-minus"></i> Deleted student: ${deletedStudent.firstName} ${deletedStudent.lastName} (remember to save)`, 'error');
+                        showStatus(`<i class="fas fa-user-minus"></i> Deleted student: ${deletedStudent.firstName} ${deletedStudent.lastName}`, 'error');
                         
                         // Shake animation for the entire table
                         tableBody.animate([
