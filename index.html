@@ -569,7 +569,7 @@
                 <button id="newFileBtn" class="btn btn-info">
                     <i class="fas fa-file-excel"></i> New Excel File
                 </button>
-                <button id="saveBtn" class="btn btn-success">
+                <button id="saveBtn" class="btn btn-success" disabled>
                     <i class="fas fa-save"></i> Save to Excel
                 </button>
             </div>
@@ -664,7 +664,7 @@
             
             let students = [];
             let editIndex = null;
-            let currentFileNameValue = '';
+            let currentFile = null;
 
             // Initialize the application
             init();
@@ -674,77 +674,49 @@
             }
 
             // File Selection - Open existing file
-            fileSelectBtn.addEventListener('click', async () => {
-                try {
-                    fileSelectBtn.disabled = true;
-                    fileSelectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+            fileSelectBtn.addEventListener('click', function() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.xlsx';
+                
+                input.onchange = async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
                     
-                    const input = document.createElement('input');
-                    input.type = 'file';
-                    input.accept = '.xlsx';
-                    
-                    input.onchange = async (e) => {
-                        const file = e.target.files[0];
-                        if (!file) {
-                            fileSelectBtn.disabled = false;
-                            fileSelectBtn.innerHTML = '<i class="fas fa-folder-open"></i> Open Excel File';
-                            return;
-                        }
+                    try {
+                        fileSelectBtn.disabled = true;
+                        fileSelectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
                         
-                        currentFileNameValue = file.name;
-                        currentFileName.textContent = file.name;
-                        fileInfoDisplay.style.display = 'flex';
+                        const data = await file.arrayBuffer();
+                        const workbook = XLSX.read(data);
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        students = XLSX.utils.sheet_to_json(firstSheet);
+                        currentFile = file.name;
                         
-                        try {
-                            const data = await file.arrayBuffer();
-                            const workbook = XLSX.read(data);
-                            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                            students = XLSX.utils.sheet_to_json(firstSheet);
-                            updateTable();
-                            
-                            showStatus(`<i class="fas fa-check-circle"></i> Loaded ${students.length} students from ${file.name}`, 'success');
-                            celebrate();
-                        } catch (err) {
-                            console.error('Error loading file:', err);
-                            showStatus('<i class="fas fa-times-circle"></i> Error loading Excel file', 'error');
-                        }
-                    };
-                    
-                    input.click();
-                } catch (err) {
-                    console.error('File selection error:', err);
-                    showStatus('<i class="fas fa-times-circle"></i> File selection failed', 'error');
-                } finally {
-                    fileSelectBtn.disabled = false;
-                    fileSelectBtn.innerHTML = '<i class="fas fa-folder-open"></i> Open Excel File';
-                }
+                        updateUIAfterFileLoad();
+                        showStatus(`<i class="fas fa-check-circle"></i> Loaded ${students.length} students from ${file.name}`, 'success');
+                    } catch (err) {
+                        console.error('Error loading file:', err);
+                        showStatus('<i class="fas fa-times-circle"></i> Error loading Excel file', 'error');
+                    } finally {
+                        fileSelectBtn.disabled = false;
+                        fileSelectBtn.innerHTML = '<i class="fas fa-folder-open"></i> Open Excel File';
+                    }
+                };
+                
+                input.click();
             });
 
             // Create new file
-            newFileBtn.addEventListener('click', async () => {
-                try {
-                    newFileBtn.disabled = true;
-                    newFileBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
-                    
-                    students = [];
-                    currentFileNameValue = 'students.xlsx';
-                    currentFileName.textContent = 'New File (not saved yet)';
-                    fileInfoDisplay.style.display = 'flex';
-                    updateTable();
-                    
-                    showStatus('<i class="fas fa-check-circle"></i> New student file created', 'success');
-                    celebrate();
-                } catch (err) {
-                    console.error('New file creation error:', err);
-                    showStatus('<i class="fas fa-times-circle"></i> New file creation failed', 'error');
-                } finally {
-                    newFileBtn.disabled = false;
-                    newFileBtn.innerHTML = '<i class="fas fa-file-excel"></i> New Excel File';
-                }
+            newFileBtn.addEventListener('click', function() {
+                students = [];
+                currentFile = 'students.xlsx';
+                updateUIAfterFileLoad();
+                showStatus('<i class="fas fa-check-circle"></i> New student file created', 'success');
             });
 
             // Save to file
-            saveBtn.addEventListener('click', async () => {
+            saveBtn.addEventListener('click', function() {
                 try {
                     saveBtn.disabled = true;
                     saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
@@ -755,9 +727,9 @@
                     XLSX.utils.book_append_sheet(wb, ws, "Students");
 
                     // Generate file name
-                    const fileName = currentFileNameValue || 'students.xlsx';
+                    const fileName = currentFile || 'students.xlsx';
                     
-                    // Save file
+                    // Save file (this will trigger download)
                     XLSX.writeFile(wb, fileName);
                     
                     showStatus(`<i class="fas fa-check-circle"></i> Saved ${students.length} students to ${fileName}`, 'success');
@@ -775,6 +747,13 @@
                     saveBtn.innerHTML = '<i class="fas fa-save"></i> Save to Excel';
                 }
             });
+
+            function updateUIAfterFileLoad() {
+                currentFileName.textContent = currentFile || 'New File';
+                fileInfoDisplay.style.display = 'flex';
+                saveBtn.disabled = false;
+                updateTable();
+            }
 
             // Form Submission
             form.addEventListener('submit', function(e) {
@@ -813,9 +792,6 @@
                     } else {
                         students.push(student);
                         showStatus(`<i class="fas fa-check-circle"></i> Student added successfully`, 'success');
-                        
-                        // Add celebration effect for new student
-                        celebrate();
                     }
 
                     updateTable();
@@ -883,7 +859,6 @@
             }
             
             function formatPhone(phone) {
-                // Simple phone number formatting
                 const cleaned = ('' + phone).replace(/\D/g, '');
                 const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
                 return match ? `(${match[1]}) ${match[2]}-${match[3]}` : phone;
@@ -894,28 +869,12 @@
                 statusDisplay.className = 'status-display';
                 if (type) statusDisplay.classList.add(type);
                 
-                // Animation for status change
                 statusDisplay.animate([
                     { opacity: 0, transform: 'translateY(-10px)' },
                     { opacity: 1, transform: 'translateY(0)' }
                 ], {
                     duration: 300,
                     fill: 'forwards'
-                });
-            }
-
-            function celebrate() {
-                // Simple confetti effect
-                const confettiElements = document.querySelectorAll('.form-container, .table-container');
-                confettiElements.forEach(el => {
-                    el.animate([
-                        { transform: 'scale(1)' },
-                        { transform: 'scale(1.02)' },
-                        { transform: 'scale(1)' }
-                    ], {
-                        duration: 300,
-                        iterations: 1
-                    });
                 });
             }
 
@@ -930,19 +889,7 @@
                 editIndex = index;
                 submitBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Update Student';
                 
-                // Scroll to form with smooth animation
                 form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                
-                // Highlight the form
-                document.querySelector('.form-container').animate([
-                    { boxShadow: '0 0 0 0 rgba(138, 0, 0, 0)' },
-                    { boxShadow: '0 0 0 5px rgba(138, 0, 0, 0.3)' },
-                    { boxShadow: '0 0 0 0 rgba(138, 0, 0, 0)' }
-                ], {
-                    duration: 1000,
-                    iterations: 1
-                });
-                
                 showStatus(`<i class="fas fa-user-edit"></i> Editing student: ${student.firstName} ${student.lastName}`, 'info');
             };
 
@@ -956,17 +903,6 @@
                         const deletedStudent = students.splice(index, 1)[0];
                         updateTable();
                         showStatus(`<i class="fas fa-user-minus"></i> Deleted student: ${deletedStudent.firstName} ${deletedStudent.lastName}`, 'error');
-                        
-                        // Shake animation for the entire table
-                        tableBody.animate([
-                            { transform: 'translateX(0)' },
-                            { transform: 'translateX(-5px)' },
-                            { transform: 'translateX(5px)' },
-                            { transform: 'translateX(0)' }
-                        ], {
-                            duration: 300,
-                            iterations: 1
-                        });
                     } else {
                         deleteBtn.classList.remove('deleting');
                         deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> Delete';
@@ -980,16 +916,6 @@
                     e.preventDefault();
                     if (!saveBtn.disabled) {
                         saveBtn.click();
-                        
-                        // Visual feedback for keyboard shortcut
-                        saveBtn.animate([
-                            { transform: 'scale(1)' },
-                            { transform: 'scale(1.1)' },
-                            { transform: 'scale(1)' }
-                        ], {
-                            duration: 300,
-                            iterations: 1
-                        });
                     }
                 }
             });
